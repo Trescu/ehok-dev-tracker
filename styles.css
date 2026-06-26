@@ -177,9 +177,21 @@ input:focus,select:focus,textarea:focus{border-color:#9EBBFF;box-shadow:0 0 0 4p
   padding:18px;
 }
 .chevron{
-  width:30px;height:30px;border:0;border-radius:10px;background:var(--soft);color:var(--blue-2);font-weight:900;transition:.2s;
+  width:34px;
+  height:34px;
+  border:1px solid rgba(20,88,212,.14);
+  border-radius:12px;
+  background:#eef4ff;
+  color:var(--blue-2);
+  font-weight:900;
+  display:inline-grid;
+  place-items:center;
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease;
 }
-.sprint-card.open .chevron{transform:rotate(180deg)}
+.chevron:hover{background:#e3edff;border-color:rgba(20,88,212,.28);box-shadow:0 8px 18px rgba(20,88,212,.08)}
+.chevron-icon::before{content:"▼";font-size:14px;line-height:1}
+.sprint-card.open .chevron-icon::before{content:"▲"}
+.sprint-card.open .chevron{background:#fff;color:var(--blue)}
 .sprint-actions,.task-actions,.card-actions{
   display:flex;
   gap:8px;
@@ -198,21 +210,35 @@ input:focus,select:focus,textarea:focus{border-color:#9EBBFF;box-shadow:0 0 0 4p
   background:rgba(248,251,255,.75);
 }
 .sprint-card.open .sprint-details{display:block}
-.task-group{margin-top:14px}
+.task-group{
+  margin-top:16px;
+  padding:16px;
+  border:1px solid rgba(221,230,242,.9);
+  border-left:5px solid rgba(20,88,212,.45);
+  border-radius:18px;
+  background:#fff;
+}
+.task-group:nth-of-type(even){
+  background:#f3f7ff;
+  border-left-color:#00c2c7;
+}
+.task-group:first-of-type{margin-top:0}
 .task-group h3{
   color:#53617A;
   text-transform:uppercase;
   font-size:13px;
   letter-spacing:.08em;
-  margin:0 0 10px;
+  margin:0 0 12px;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(221,230,242,.85);
 }
 .task-inline{
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
   gap:14px;
   align-items:center;
-  padding:15px 0;
-  border-top:1px solid rgba(221,230,242,.9);
+  padding:14px 0;
+  border-top:1px solid rgba(221,230,242,.75);
 }
 .task-inline:first-of-type{border-top:0}
 .task-inline p,.task-card p{margin:7px 0 0;color:#586985;line-height:1.45}
@@ -323,3 +349,33 @@ input:focus,select:focus,textarea:focus{border-color:#9EBBFF;box-shadow:0 0 0 4p
   background: transparent !important;
 }
 .brand-wordmark { display: none !important; }
+
+/* v7.7 sprint interaction fixes */
+.sprint-summary{
+  cursor:pointer;
+  transition:background .16s ease, box-shadow .16s ease;
+}
+.sprint-summary:hover{
+  background:rgba(248,251,255,.92);
+}
+.sprint-actions,
+.sprint-actions *{
+  cursor:auto;
+}
+.sprint-card.open .sprint-summary{
+  position:sticky;
+  top:96px;
+  z-index:8;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 10px 22px rgba(20,32,51,.06);
+}
+.sprint-card.open{
+  overflow:visible;
+}
+@media(max-width:880px){
+  .sprint-card.open .sprint-summary{top:84px;}
+}
+@media(max-width:560px){
+  .sprint-card.open .sprint-summary{top:74px;}
+}

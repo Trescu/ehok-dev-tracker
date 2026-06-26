@@ -103,7 +103,7 @@ function renderSprint(s){
   }).join('');
   return `<article class="sprint-card" data-sprint-id="${esc(s.id)}">
     <div class="sprint-summary">
-      <button class="chevron" data-toggle-sprint="${esc(s.id)}">⌄</button>
+      <button class="chevron" data-toggle-sprint="${esc(s.id)}" aria-label="Sprint lenyitása"><span class="chevron-icon" aria-hidden="true"></span></button>
       <div>
         <div class="item-title">${esc(s.code ? s.code+' – ' : '')}${esc(s.title)}</div>
         <div class="meta">${fmtDate(s.startDate)} → ${fmtDate(s.endDate)} · ${ts.length} feladat</div>
@@ -250,7 +250,13 @@ $('#modalForm').addEventListener('submit', e => {
 document.addEventListener('click', e => {
   const t=e.target;
   const sprintCard = t.closest?.('.sprint-card');
-  if(t.dataset.toggleSprint){ sprintCard.classList.toggle('open'); }
+  const toggleBtn = t.closest?.('[data-toggle-sprint]');
+  const summary = t.closest?.('.sprint-summary');
+  if(toggleBtn && sprintCard){ sprintCard.classList.toggle('open'); return; }
+  if(summary && sprintCard && !t.closest?.('.sprint-actions, button, select, input, textarea, a, label')){
+    sprintCard.classList.toggle('open');
+    return;
+  }
   if(t.dataset.newTaskForSprint) openModal('task', null, {sprintId:t.dataset.newTaskForSprint});
   if(t.dataset.editSprint) openModal('sprint', t.dataset.editSprint);
   if(t.dataset.editTask) openModal('task', t.dataset.editTask);
@@ -288,13 +294,20 @@ function makeCsv(){
   state.notes.forEach(n => rows.push(['note',n.id,'',n.title,'','','','','','','','','','',n.tags,'',n.body,n.createdAt,n.updatedAt]));
   return rows.map(r => r.map(csvEscape).join(';')).join('\n');
 }
+function detectDelimiter(text){
+  const firstLine = String(text || '').split(/\r?\n/)[0] || '';
+  const semicolons = (firstLine.match(/;/g) || []).length;
+  const commas = (firstLine.match(/,/g) || []).length;
+  return semicolons >= commas ? ';' : ',';
+}
 function parseCsv(text){
+  const delimiter = detectDelimiter(text);
   const rows=[]; let row=[], cell='', q=false;
   for(let i=0;i<text.length;i++){
     const c=text[i], n=text[i+1];
     if(q && c==='"' && n==='"'){ cell+='"'; i++; continue; }
     if(c==='"'){ q=!q; continue; }
-    if(!q && (c===';' || c===',')){ row.push(cell.replaceAll('\\n','\n')); cell=''; continue; }
+    if(!q && c===delimiter){ row.push(cell.replaceAll('\\n','\n')); cell=''; continue; }
     if(!q && (c==='\n' || c==='\r')){ if(c==='\r' && n==='\n') i++; row.push(cell.replaceAll('\\n','\n')); rows.push(row); row=[]; cell=''; continue; }
     cell+=c;
   }
