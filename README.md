@@ -1,22 +1,26 @@
 # eHÖK Dev Tracker
 
-Egyszerű, lokálisan futó fejlesztői tracker eHÖK arculattal.
+AI-generated, static development tracker for monitoring the Platform Core development of the eHÖK project.
 
-## Használat
+## Purpose
 
-Nyisd meg az `index.html` fájlt böngészőben.
+This tool is only for planning and tracking development progress. It is not part of the production eHÖK platform.
 
-## Funkciók
+## Features
 
-- Dashboard
-- Sprintek létrehozása, szerkesztése, törlése
-- Feladatok létrehozása, szerkesztése, törlése
-- Mérföldkövek létrehozása, szerkesztése, törlése
-- Jegyzetek létrehozása, szerkesztése, törlése
-- Platform Core alap sprintek és feladatok előre feltöltve
-- LocalStorage mentés
+- Dashboard with sprint, task, milestone and area progress
+- Expandable sprint cards with grouped task lists
+- Editable sprints, tasks, milestones and notes
+- Mobile-first responsive UI
+- Preloaded Platform Core sprint plan
+- Design / Frontend / Backend / Database / Security / Testing / Documentation / DevOps areas
 - CSV export/import
+- LocalStorage persistence
 
-## Megjegyzés
+## Usage
 
-Nincs backend, nincs login, nincs adatbázis. Az adatok a böngésző LocalStorage tárhelyén maradnak.
+Open `index.html` in a browser, or publish the folder as a static site.
+
+## Important
+
+There is no backend, login, or database. Data is stored in the browser's LocalStorage. Use CSV export for backups.

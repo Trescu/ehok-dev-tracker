@@ -4,130 +4,163 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>eHÖK Dev Tracker</title>
-  <link rel="icon" href="assets/favicon.png" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Fő navigáció">
       <div class="brand">
-        <img src="assets/favicon.png" alt="eHÖK ikon" class="brand-icon" />
-        <div><strong>eHÖK</strong><span>Dev Tracker</span></div>
+        <img src="assets/favicon.png" alt="eHÖK ikon" class="brand-mark" />
+        <div>
+          <img src="assets/ehok-logo-transparent.png" alt="eHÖK" class="brand-logo" />
+          <span>Dev Tracker</span>
+        </div>
       </div>
+
       <nav class="nav">
         <button class="nav-item active" data-view="dashboard">Dashboard</button>
         <button class="nav-item" data-view="sprints">Sprintek</button>
         <button class="nav-item" data-view="tasks">Feladatok</button>
-        <button class="nav-item" data-view="roadmap">Mérföldkövek</button>
+        <button class="nav-item" data-view="milestones">Mérföldkövek</button>
         <button class="nav-item" data-view="notes">Jegyzetek</button>
       </nav>
+
       <div class="sidebar-footer">
         <button id="exportBtn" class="ghost-btn">CSV export</button>
         <label class="ghost-btn file-label">CSV import<input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
+        <button id="resetDemoBtn" class="ghost-btn subtle-danger">Alapadatok visszaállítása</button>
       </div>
     </aside>
 
     <main class="main">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Egyszerű fejlesztői tracker</p>
+          <p class="eyebrow">eHÖK Platform Core</p>
           <h1 id="pageTitle">Dashboard</h1>
         </div>
-        <button id="resetDemoBtn" class="danger-lite">Alap adatok visszaállítása</button>
+        <div class="topbar-actions">
+          <button class="primary-btn" id="quickTaskBtn">Új feladat</button>
+          <button class="secondary-btn" id="quickMilestoneBtn">Új mérföldkő</button>
+        </div>
       </header>
 
       <section id="dashboard" class="view active-view">
-        <div class="hero-card">
-          <div>
-            <img src="assets/ehok-logo.png" alt="eHÖK logó" class="hero-logo" />
-            <p>Platform Core fejlesztési sprintek, feladatok és mérföldkövek követése.</p>
-          </div>
-          <div class="hero-progress"><span id="overallPercent">0%</span><small>összesített készültség</small></div>
-        </div>
-
         <div class="stats-grid">
+          <article class="stat-card"><span>Összes sprint</span><strong id="totalSprints">0</strong></article>
           <article class="stat-card"><span>Összes feladat</span><strong id="totalTasks">0</strong></article>
-          <article class="stat-card"><span>Kész</span><strong id="doneTasks">0</strong></article>
-          <article class="stat-card"><span>Folyamatban</span><strong id="progressTasks">0</strong></article>
+          <article class="stat-card"><span>Kész feladat</span><strong id="doneTasks">0</strong></article>
           <article class="stat-card"><span>Blokkolt</span><strong id="blockedTasks">0</strong></article>
         </div>
 
         <div class="content-grid">
           <article class="panel wide">
-            <div class="panel-head"><h2>Feladatok állapota</h2></div>
+            <div class="panel-head"><h2>Teljes Platform Core haladás</h2><span id="overallPercent" class="pill">0%</span></div>
             <div class="progress"><div id="overallBar"></div></div>
-            <div id="statusProgress" class="module-list"></div>
+            <div id="areaProgress" class="area-list"></div>
           </article>
+
           <article class="panel">
-            <div class="panel-head"><h2>Aktív sprintek</h2></div>
-            <div id="activeSprints" class="compact-list"></div>
+            <div class="panel-head"><h2>Aktív sprint</h2></div>
+            <div id="activeSprintCard"></div>
           </article>
         </div>
 
-        <div class="content-grid bottom-grid">
+        <div class="content-grid lower-grid">
           <article class="panel">
-            <div class="panel-head"><h2>Következő feladatok</h2></div>
+            <div class="panel-head"><h2>Közelgő feladatok</h2></div>
             <div id="upcomingTasks" class="compact-list"></div>
           </article>
           <article class="panel">
-            <div class="panel-head"><h2>Mérföldkövek</h2></div>
-            <div id="dashboardRoadmap" class="compact-list"></div>
+            <div class="panel-head"><h2>Mérföldkövek</h2><button class="inline-btn" data-jump="milestones">Megnyitás</button></div>
+            <div id="dashboardMilestones" class="compact-list"></div>
           </article>
         </div>
       </section>
 
       <section id="sprints" class="view">
-        <div class="form-card"><h2 id="sprintFormTitle">Új sprint</h2><form id="sprintForm" class="form-grid sprint-form">
-          <input type="hidden" name="id" />
-          <input name="name" placeholder="Sprint neve, pl. PC-01 – Tenant alapmodell" required />
-          <label><span>Kezdés</span><input name="startDate" type="date" /></label>
-          <label><span>Vége</span><input name="endDate" type="date" /></label>
-          <select name="status"><option>Tervezett</option><option>Folyamatban</option><option>Kész</option><option>Csúszik</option></select>
-          <button type="submit">Mentés</button>
-          <button type="button" id="cancelSprintEdit" class="secondary hidden">Mégse</button>
-        </form></div>
-        <div id="sprintList" class="card-list"></div>
+        <div class="form-card">
+          <div class="form-head">
+            <h2>Új sprint</h2>
+            <p>A dátumok külön mezőben vannak, így egyértelmű a kezdés és a zárás.</p>
+          </div>
+          <form id="sprintForm" class="form-grid sprint-form">
+            <input name="name" placeholder="Sprint neve" required />
+            <input name="goal" placeholder="Sprint célja" />
+            <input name="startDate" type="date" aria-label="Kezdés" />
+            <input name="endDate" type="date" aria-label="Befejezés" />
+            <select name="status"><option>Tervezett</option><option>Folyamatban</option><option>Review</option><option>Kész</option><option>Blokkolt</option></select>
+            <button type="submit">Sprint hozzáadása</button>
+          </form>
+        </div>
+        <div id="sprintList" class="sprint-list"></div>
       </section>
 
       <section id="tasks" class="view">
-        <div class="form-card"><h2 id="taskFormTitle">Új feladat</h2><form id="taskForm" class="form-grid task-form">
-          <input type="hidden" name="id" />
-          <input name="title" placeholder="Feladat címe" required />
-          <input name="area" list="areaOptions" placeholder="Terület" />
-          <datalist id="areaOptions"><option>Backend</option><option>Database</option><option>Auth</option><option>Tenant</option><option>Audit</option><option>API</option><option>Admin UI</option><option>Dokumentáció</option><option>Tesztelés</option><option>DevOps</option></datalist>
-          <select name="sprint" id="sprintSelect"></select>
-          <select name="status"><option>Backlog</option><option>To Do</option><option>In Progress</option><option>Review</option><option>Done</option><option>Blocked</option></select>
-          <select name="priority"><option>Alacsony</option><option>Közepes</option><option>Magas</option><option>Kritikus</option></select>
-          <button type="submit">Mentés</button>
-          <button type="button" id="cancelTaskEdit" class="secondary hidden">Mégse</button>
-        </form></div>
-        <div class="toolbar"><input id="taskSearch" placeholder="Keresés feladatok között..." /></div>
+        <div class="form-card">
+          <div class="form-head"><h2>Új feladat</h2><p>Design, frontend, backend, tesztelés és dokumentáció külön területként követhető.</p></div>
+          <form id="taskForm" class="form-grid task-form">
+            <input name="title" placeholder="Feladat címe" required />
+            <select name="sprint" id="sprintSelect"></select>
+            <select name="area" id="areaSelect"></select>
+            <select name="status" id="statusSelect"></select>
+            <select name="priority" id="prioritySelect"></select>
+            <input name="estimate" placeholder="Becsült idő, pl. 2h" />
+            <textarea name="description" placeholder="Leírás / elfogadási kritérium"></textarea>
+            <button type="submit">Feladat hozzáadása</button>
+          </form>
+        </div>
+        <div class="toolbar">
+          <input id="taskSearch" placeholder="Keresés feladatok között..." />
+          <select id="taskAreaFilter"></select>
+          <select id="taskSprintFilter"></select>
+          <select id="taskStatusFilter"></select>
+        </div>
         <div id="taskList" class="task-list"></div>
       </section>
 
-      <section id="roadmap" class="view">
-        <div class="form-card"><h2 id="roadmapFormTitle">Új mérföldkő</h2><form id="roadmapForm" class="form-grid roadmap-form">
-          <input type="hidden" name="id" />
-          <input name="title" placeholder="Mérföldkő" required />
-          <select name="status"><option>Tervezett</option><option>Folyamatban</option><option>Kész</option></select>
-          <button type="submit">Mentés</button>
-          <button type="button" id="cancelRoadmapEdit" class="secondary hidden">Mégse</button>
-        </form></div>
-        <div id="roadmapList" class="timeline"></div>
+      <section id="milestones" class="view">
+        <div class="form-card">
+          <div class="form-head"><h2>Új mérföldkő</h2><p>A mérföldkövek szerkeszthetők, és a dashboardon is megjelennek.</p></div>
+          <form id="milestoneForm" class="form-grid milestone-form">
+            <input name="title" placeholder="Mérföldkő neve" required />
+            <input name="targetDate" type="date" aria-label="Céldátum" />
+            <select name="status"><option>Tervezett</option><option>Folyamatban</option><option>Review</option><option>Kész</option><option>Blokkolt</option></select>
+            <textarea name="description" placeholder="Leírás"></textarea>
+            <button type="submit">Mérföldkő hozzáadása</button>
+          </form>
+        </div>
+        <div id="milestoneList" class="timeline"></div>
       </section>
 
       <section id="notes" class="view">
-        <div class="form-card"><h2 id="noteFormTitle">Új jegyzet</h2><form id="noteForm" class="note-form">
-          <input type="hidden" name="id" />
-          <input name="title" placeholder="Jegyzet címe" required />
-          <textarea name="body" placeholder="Rövid fejlesztési jegyzet, döntés, emlékeztető..."></textarea>
-          <button type="submit">Mentés</button>
-          <button type="button" id="cancelNoteEdit" class="secondary hidden">Mégse</button>
-        </form></div>
+        <div class="form-card">
+          <div class="form-head"><h2>Új jegyzet</h2><p>Döntések, fejlesztési megjegyzések, blokkerek.</p></div>
+          <form id="noteForm" class="note-form">
+            <input name="title" placeholder="Jegyzet címe" required />
+            <textarea name="body" placeholder="Rövid fejlesztési jegyzet..."></textarea>
+            <button type="submit">Jegyzet mentése</button>
+          </form>
+        </div>
         <div id="noteList" class="card-list"></div>
       </section>
     </main>
   </div>
+
+  <dialog id="editDialog" class="modal">
+    <form method="dialog" id="editForm" class="modal-card">
+      <div class="modal-head">
+        <h2 id="editTitle">Szerkesztés</h2>
+        <button type="button" class="icon-btn" id="closeEditBtn">×</button>
+      </div>
+      <div id="editFields" class="edit-fields"></div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" id="cancelEditBtn">Mégse</button>
+        <button type="submit" class="primary-btn">Mentés</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="app.js"></script>
 </body>
 </html>
