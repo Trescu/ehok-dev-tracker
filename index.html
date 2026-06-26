@@ -1,165 +1,124 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>eHÖK Dev Tracker</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="icon" href="assets/favicon.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="Fő navigáció">
-      <div class="brand">
-        <img src="assets/favicon.png" alt="eHÖK ikon" class="brand-mark" />
-        <div>
-          <img src="assets/ehok-logo-transparent.png" alt="eHÖK" class="brand-logo" />
-          <span>Dev Tracker</span>
-        </div>
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-icon" src="assets/favicon.png" alt="eHÖK ikon" />
+      <div class="brand-copy">
+        <img class="brand-logo" src="assets/ehok-logo-transparent.png" alt="eHÖK" />
+        <span>Dev Tracker</span>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Fő navigáció">
+      <button class="nav-item active" data-view="dashboard">Dashboard</button>
+      <button class="nav-item" data-view="sprints">Sprintek</button>
+      <button class="nav-item" data-view="tasks">Feladatok</button>
+      <button class="nav-item" data-view="milestones">Mérföldkövek</button>
+      <button class="nav-item" data-view="notes">Jegyzetek</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="exportBtn" class="ghost-btn">CSV export</button>
+      <label class="ghost-btn file-label">CSV import<input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
+      <button id="resetBtn" class="ghost-btn ghost-danger">Üres állapot visszaállítása</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">eHÖK Dev Tracker</p>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="top-actions">
+        <button class="primary-btn" data-open-modal="task">Új feladat</button>
+        <button class="secondary-btn" data-open-modal="sprint">Új sprint</button>
+        <button class="secondary-btn" data-open-modal="milestone">Új mérföldkő</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="view active-view">
+      <div class="stats-grid">
+        <article class="stat-card"><span>Összes sprint</span><strong id="statSprints">0</strong></article>
+        <article class="stat-card"><span>Összes feladat</span><strong id="statTasks">0</strong></article>
+        <article class="stat-card"><span>Kész feladat</span><strong id="statDone">0</strong></article>
+        <article class="stat-card"><span>Blokkolt</span><strong id="statBlocked">0</strong></article>
       </div>
 
-      <nav class="nav">
-        <button class="nav-item active" data-view="dashboard">Dashboard</button>
-        <button class="nav-item" data-view="sprints">Sprintek</button>
-        <button class="nav-item" data-view="tasks">Feladatok</button>
-        <button class="nav-item" data-view="milestones">Mérföldkövek</button>
-        <button class="nav-item" data-view="notes">Jegyzetek</button>
-      </nav>
+      <div class="content-grid">
+        <article class="panel">
+          <div class="panel-head"><h2>Feladatok területenként</h2><span id="overallPill" class="pill">0%</span></div>
+          <div class="progress"><div id="overallBar"></div></div>
+          <div id="areaProgress" class="area-list"></div>
+        </article>
 
-      <div class="sidebar-footer">
-        <button id="exportBtn" class="ghost-btn">CSV export</button>
-        <label class="ghost-btn file-label">CSV import<input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
-        <button id="resetDemoBtn" class="ghost-btn subtle-danger">Alapadatok visszaállítása</button>
+        <article class="panel">
+          <div class="panel-head"><h2>Aktív sprintek</h2><button class="link-btn" data-jump="sprints">Megnyitás</button></div>
+          <div id="activeSprints" class="stack"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head"><h2>Közelgő feladatok</h2><button class="link-btn" data-jump="tasks">Megnyitás</button></div>
+          <div id="upcomingTasks" class="stack"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head"><h2>Mérföldkövek</h2><button class="link-btn" data-jump="milestones">Megnyitás</button></div>
+          <div id="dashboardMilestones" class="stack"></div>
+        </article>
       </div>
-    </aside>
+    </section>
 
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">eHÖK Platform Core</p>
-          <h1 id="pageTitle">Dashboard</h1>
-        </div>
-        <div class="topbar-actions">
-          <button class="primary-btn" id="quickTaskBtn">Új feladat</button>
-          <button class="secondary-btn" id="quickMilestoneBtn">Új mérföldkő</button>
-        </div>
-      </header>
+    <section id="sprints" class="view">
+      <div class="view-tools">
+        <input id="sprintSearch" placeholder="Keresés sprintek között..." />
+        <button class="primary-btn" data-open-modal="sprint">Új sprint</button>
+      </div>
+      <div id="sprintList" class="sprint-list"></div>
+    </section>
 
-      <section id="dashboard" class="view active-view">
-        <div class="stats-grid">
-          <article class="stat-card"><span>Összes sprint</span><strong id="totalSprints">0</strong></article>
-          <article class="stat-card"><span>Összes feladat</span><strong id="totalTasks">0</strong></article>
-          <article class="stat-card"><span>Kész feladat</span><strong id="doneTasks">0</strong></article>
-          <article class="stat-card"><span>Blokkolt</span><strong id="blockedTasks">0</strong></article>
-        </div>
+    <section id="tasks" class="view">
+      <div class="view-tools tools-grid">
+        <input id="taskSearch" placeholder="Keresés feladatok között..." />
+        <select id="taskAreaFilter"><option value="">Minden terület</option></select>
+        <select id="taskStatusFilter"><option value="">Minden állapot</option></select>
+        <button class="primary-btn" data-open-modal="task">Új feladat</button>
+      </div>
+      <div id="taskList" class="task-list"></div>
+    </section>
 
-        <div class="content-grid">
-          <article class="panel wide">
-            <div class="panel-head"><h2>Teljes Platform Core haladás</h2><span id="overallPercent" class="pill">0%</span></div>
-            <div class="progress"><div id="overallBar"></div></div>
-            <div id="areaProgress" class="area-list"></div>
-          </article>
+    <section id="milestones" class="view">
+      <div class="view-tools">
+        <input id="milestoneSearch" placeholder="Keresés mérföldkövek között..." />
+        <button class="primary-btn" data-open-modal="milestone">Új mérföldkő</button>
+      </div>
+      <div id="milestoneList" class="card-list"></div>
+    </section>
 
-          <article class="panel">
-            <div class="panel-head"><h2>Aktív sprint</h2></div>
-            <div id="activeSprintCard"></div>
-          </article>
-        </div>
+    <section id="notes" class="view">
+      <div class="view-tools">
+        <input id="noteSearch" placeholder="Keresés jegyzetek között..." />
+        <button class="primary-btn" data-open-modal="note">Új jegyzet</button>
+      </div>
+      <div id="noteList" class="card-list"></div>
+    </section>
+  </main>
 
-        <div class="content-grid lower-grid">
-          <article class="panel">
-            <div class="panel-head"><h2>Közelgő feladatok</h2></div>
-            <div id="upcomingTasks" class="compact-list"></div>
-          </article>
-          <article class="panel">
-            <div class="panel-head"><h2>Mérföldkövek</h2><button class="inline-btn" data-jump="milestones">Megnyitás</button></div>
-            <div id="dashboardMilestones" class="compact-list"></div>
-          </article>
-        </div>
-      </section>
-
-      <section id="sprints" class="view">
-        <div class="form-card">
-          <div class="form-head">
-            <h2>Új sprint</h2>
-            <p>A dátumok külön mezőben vannak, így egyértelmű a kezdés és a zárás.</p>
-          </div>
-          <form id="sprintForm" class="form-grid sprint-form">
-            <input name="name" placeholder="Sprint neve" required />
-            <input name="goal" placeholder="Sprint célja" />
-            <input name="startDate" type="date" aria-label="Kezdés" />
-            <input name="endDate" type="date" aria-label="Befejezés" />
-            <select name="status"><option>Tervezett</option><option>Folyamatban</option><option>Review</option><option>Kész</option><option>Blokkolt</option></select>
-            <button type="submit">Sprint hozzáadása</button>
-          </form>
-        </div>
-        <div id="sprintList" class="sprint-list"></div>
-      </section>
-
-      <section id="tasks" class="view">
-        <div class="form-card">
-          <div class="form-head"><h2>Új feladat</h2><p>Design, frontend, backend, tesztelés és dokumentáció külön területként követhető.</p></div>
-          <form id="taskForm" class="form-grid task-form">
-            <input name="title" placeholder="Feladat címe" required />
-            <select name="sprint" id="sprintSelect"></select>
-            <select name="area" id="areaSelect"></select>
-            <select name="status" id="statusSelect"></select>
-            <select name="priority" id="prioritySelect"></select>
-            <input name="estimate" placeholder="Becsült idő, pl. 2h" />
-            <textarea name="description" placeholder="Leírás / elfogadási kritérium"></textarea>
-            <button type="submit">Feladat hozzáadása</button>
-          </form>
-        </div>
-        <div class="toolbar">
-          <input id="taskSearch" placeholder="Keresés feladatok között..." />
-          <select id="taskAreaFilter"></select>
-          <select id="taskSprintFilter"></select>
-          <select id="taskStatusFilter"></select>
-        </div>
-        <div id="taskList" class="task-list"></div>
-      </section>
-
-      <section id="milestones" class="view">
-        <div class="form-card">
-          <div class="form-head"><h2>Új mérföldkő</h2><p>A mérföldkövek szerkeszthetők, és a dashboardon is megjelennek.</p></div>
-          <form id="milestoneForm" class="form-grid milestone-form">
-            <input name="title" placeholder="Mérföldkő neve" required />
-            <input name="targetDate" type="date" aria-label="Céldátum" />
-            <select name="status"><option>Tervezett</option><option>Folyamatban</option><option>Review</option><option>Kész</option><option>Blokkolt</option></select>
-            <textarea name="description" placeholder="Leírás"></textarea>
-            <button type="submit">Mérföldkő hozzáadása</button>
-          </form>
-        </div>
-        <div id="milestoneList" class="timeline"></div>
-      </section>
-
-      <section id="notes" class="view">
-        <div class="form-card">
-          <div class="form-head"><h2>Új jegyzet</h2><p>Döntések, fejlesztési megjegyzések, blokkerek.</p></div>
-          <form id="noteForm" class="note-form">
-            <input name="title" placeholder="Jegyzet címe" required />
-            <textarea name="body" placeholder="Rövid fejlesztési jegyzet..."></textarea>
-            <button type="submit">Jegyzet mentése</button>
-          </form>
-        </div>
-        <div id="noteList" class="card-list"></div>
-      </section>
-    </main>
+  <div id="modalBackdrop" class="modal-backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button id="modalClose" class="modal-close" aria-label="Bezárás">×</button>
+      <h2 id="modalTitle">Szerkesztés</h2>
+      <form id="modalForm" class="modal-form"></form>
+    </section>
   </div>
-
-  <dialog id="editDialog" class="modal">
-    <form method="dialog" id="editForm" class="modal-card">
-      <div class="modal-head">
-        <h2 id="editTitle">Szerkesztés</h2>
-        <button type="button" class="icon-btn" id="closeEditBtn">×</button>
-      </div>
-      <div id="editFields" class="edit-fields"></div>
-      <div class="modal-actions">
-        <button type="button" class="secondary-btn" id="cancelEditBtn">Mégse</button>
-        <button type="submit" class="primary-btn">Mentés</button>
-      </div>
-    </form>
-  </dialog>
 
   <script src="app.js"></script>
 </body>

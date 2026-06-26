@@ -1,26 +1,42 @@
-# eHÖK Dev Tracker
+# eHÖK Dev Tracker v7
 
-AI-generated, static development tracker for monitoring the Platform Core development of the eHÖK project.
+Lokálisan futó fejlesztői tracker eHÖK arculattal, CSV import/export támogatással.
 
-## Purpose
+## Fő változások
 
-This tool is only for planning and tracking development progress. It is not part of the production eHÖK platform.
+- Nincsenek előre betöltött sprintek, feladatok, mérföldkövek vagy jegyzetek.
+- Részletesebb CSV export/import.
+- Sticky bal oldali sidebar desktopon.
+- Sticky oldalfejléc.
+- Javított feladatkártya-layout: a leírás nem nyújtja meg a jobb oldali gombokat.
+- Javított modal bezáró gomb.
+- A modal és sidebar görgetősávjai rejtve vannak.
+- Lenyitható sprintkártyák.
 
-## Features
+## Használat
 
-- Dashboard with sprint, task, milestone and area progress
-- Expandable sprint cards with grouped task lists
-- Editable sprints, tasks, milestones and notes
-- Mobile-first responsive UI
-- Preloaded Platform Core sprint plan
-- Design / Frontend / Backend / Database / Security / Testing / Documentation / DevOps areas
-- CSV export/import
-- LocalStorage persistence
+Nyisd meg az `index.html` fájlt böngészőben, vagy tedd ki GitHub Pages-re.
 
-## Usage
+## Adattárolás
 
-Open `index.html` in a browser, or publish the folder as a static site.
+Az adatok a böngésző LocalStorage tárhelyén maradnak. CSV export/import használható mentéshez vagy előre generált adatok betöltéséhez.
 
-## Important
+## CSV mezők
 
-There is no backend, login, or database. Data is stored in the browser's LocalStorage. Use CSV export for backups.
+`type;id;code;title;description;status;priority;area;sprintId;sprintCode;startDate;endDate;dueDate;estimateHours;tags;notes;body;createdAt;updatedAt`
+
+Típusok:
+- `sprint`
+- `task`
+- `milestone`
+- `note`
+
+
+## v7.3
+
+- Fixed sidebar brand wordmark to use a dedicated white eHÖK asset.
+
+
+## v7.4
+
+- Final sidebar brand fix: the original transparent eHÖK wordmark is used and inverted to white on the blue sidebar.
