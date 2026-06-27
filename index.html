@@ -39,14 +39,6 @@
       <button class="nav-item" data-view="notes">Jegyzetek</button>
     </nav>
 
-    <div class="sidebar-footer">
-      <button id="remoteSaveBtn" class="ghost-btn" hidden>Mentés</button>
-      <button id="remoteLoadBtn" class="ghost-btn">Betöltés</button>
-      <button id="discardBtn" class="ghost-btn ghost-danger" hidden>Elvetés</button>
-      <label class="ghost-btn file-label">Import<input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
-      <button id="exportBtn" class="ghost-btn">Export</button>
-      <button id="resetBtn" class="ghost-btn ghost-danger">Helyi adatok törlése</button>
-    </div>
   </aside>
 
   <main class="main">
@@ -128,6 +120,14 @@
         <button class="primary-btn" data-open-modal="note">Új jegyzet</button>
       </div>
       <div id="noteList" class="card-list"></div>
+    </section>
+    <section class="bottom-action-bar" aria-label="Adatműveletek">
+      <button id="remoteSaveBtn" class="action-bar-btn primary-action" hidden><span class="action-icon">💾</span><span>Mentés</span></button>
+      <button id="discardBtn" class="action-bar-btn warning-action" hidden><span class="action-icon">↶</span><span>Módosítások elvetése</span></button>
+      <button id="remoteLoadBtn" class="action-bar-btn"><span class="action-icon">☁</span><span>Betöltés</span></button>
+      <label class="action-bar-btn file-label"><span class="action-icon">↑</span><span>Import</span><input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
+      <button id="exportBtn" class="action-bar-btn"><span class="action-icon">↓</span><span>Export</span></button>
+      <button id="resetBtn" class="action-bar-btn danger-action"><span class="action-icon">🗑</span><span>Helyi adatok törlése</span></button>
     </section>
   </main>
 

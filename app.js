@@ -533,7 +533,7 @@ async function saveToGitHub(){
     });
     setServerBaselineCsv(csv);
     setDiscardAvailable(Boolean(payload.backup));
-    alert(`Mentve.${payload.backup ? '\nAz előző szerverállapot ideiglenes mentésbe került, ezért az Elvetés gomb elérhető.' : ''}${payload.commit ? '\nCommit: '+payload.commit.slice(0,7) : ''}`);
+    alert(`Mentve.${payload.backup ? '\nAz előző szerverállapot ideiglenes mentésbe került, ezért a Módosítások elvetése gomb elérhető.' : ''}${payload.commit ? '\nCommit: '+payload.commit.slice(0,7) : ''}`);
   }catch(err){
     console.error(err);
     alert(`Mentés sikertelen: ${err.message}`);
@@ -541,7 +541,7 @@ async function saveToGitHub(){
 }
 async function discardChanges(){
   try{
-    if(!confirm('Elveted a változtatásokat? Ha van ideiglenes szervermentés, az előző fő CSV kerül visszaállításra.')) return;
+    if(!confirm('Elveted a módosításokat? Ha van ideiglenes szervermentés, az előző fő CSV kerül visszaállításra.')) return;
     let csv = '';
     let restoredBackup = false;
 
@@ -564,7 +564,7 @@ async function discardChanges(){
     state = importCsv(csv);
     save();
     setDiscardAvailable(false);
-    alert(restoredBackup ? 'Elvetve: az előző szerverállapot visszaállt.' : 'Helyi változtatások elvetve, a szerveren mentett állapot visszaállítva.');
+    alert(restoredBackup ? 'Módosítások elvetve: az előző szerverállapot visszaállt.' : 'Helyi változtatások elvetve, a szerveren mentett állapot visszaállítva.');
   }catch(err){
     console.error(err);
     const fallback = getServerBaselineCsv();
@@ -575,7 +575,7 @@ async function discardChanges(){
       alert('Helyi mentett szerverállapot visszaállítva.');
       return;
     }
-    alert(`Elvetés sikertelen: ${err.message}`);
+    alert(`Módosítások elvetése sikertelen: ${err.message}`);
   }
 }
 $('#remoteLoadBtn')?.addEventListener('click', loadFromGitHub);

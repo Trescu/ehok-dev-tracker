@@ -549,3 +549,84 @@ body:not(.auth-locked) .auth-screen { display: none; }
   .auth-card { padding: 24px; border-radius: 22px; }
   .auth-logo { width: 110px; }
 }
+
+/* v8.0 bottom action bar: sidebar remains navigation-only */
+.sidebar-footer{display:none!important;}
+.main{padding-bottom:92px;}
+.bottom-action-bar{
+  position:fixed;
+  left:280px;
+  right:0;
+  bottom:0;
+  z-index:45;
+  min-height:58px;
+  padding:8px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  background:rgba(255,255,255,.94);
+  border-top:1px solid var(--line);
+  box-shadow:0 -14px 38px rgba(10,47,143,.08);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+.bottom-action-bar [hidden]{display:none!important;}
+.action-bar-btn{
+  min-height:42px;
+  padding:8px 18px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--blue);
+  font-weight:850;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  white-space:nowrap;
+  position:relative;
+}
+.action-bar-btn:not(:last-child)::after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:10px;
+  bottom:10px;
+  width:1px;
+  background:var(--line);
+}
+.action-bar-btn:hover{background:rgba(20,88,212,.07);border-radius:12px;}
+.action-icon{font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-width:22px;}
+.primary-action{color:var(--blue-2);}
+.warning-action{color:#1d4ed8;}
+.danger-action{color:var(--blue);}
+
+@media(max-width:1100px){
+  .bottom-action-bar{justify-content:flex-start;overflow-x:auto;scrollbar-width:none;padding:8px 18px;}
+  .bottom-action-bar::-webkit-scrollbar{display:none;}
+  .action-bar-btn{padding:8px 14px;}
+}
+@media(max-width:860px){
+  .main{padding-bottom:84px!important;}
+  .bottom-action-bar{
+    left:0;
+    min-height:56px;
+    padding:7px 10px calc(7px + env(safe-area-inset-bottom));
+    justify-content:flex-start;
+    overflow-x:auto;
+    gap:0;
+  }
+  .action-bar-btn{
+    min-height:40px;
+    padding:7px 12px;
+    font-size:13px;
+    flex:0 0 auto;
+  }
+  .action-icon{font-size:18px;min-width:20px;}
+}
+@media(max-width:520px){
+  .bottom-action-bar{min-height:54px;padding-left:8px;padding-right:8px;}
+  .action-bar-btn{font-size:12px;padding:7px 10px;gap:7px;}
+  .action-icon{font-size:17px;min-width:18px;}
+}
