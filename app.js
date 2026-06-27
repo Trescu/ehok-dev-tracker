@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'ehokDevTrackerEmptyV7';
+const AUTH_STORAGE_KEY = 'ehokDevTrackerSessionToken';
 const AREAS = ['Tracker','Planning','Design','Frontend','Backend','Database','Security','Testing','Documentation','DevOps','UX','Accessibility','Refactor','Bugfix'];
 const STATUSES = ['Backlog','To Do','In Progress','Review','Done','Blocked'];
 const SPRINT_STATUSES = ['Tervezett','Folyamatban','Review','Kész','Blokkolt'];
@@ -352,8 +353,154 @@ $('#resetBtn').addEventListener('click', () => {
   }
 });
 
-renderFilters();
-renderAll();
+
+// Password gate + GitHub CSV sync via Vercel Functions
+function getSessionToken(){
+  return localStorage.getItem(AUTH_STORAGE_KEY) || '';
+}
+function setSessionToken(value){
+  if(value) localStorage.setItem(AUTH_STORAGE_KEY, value);
+  else localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+function authHeaders(extra={}){
+  const token = getSessionToken();
+  return {
+    'Accept':'application/json',
+    ...(token ? {'Authorization': `Bearer ${token}`} : {}),
+    ...extra
+  };
+}
+async function loginWithPassword(password){
+  const response = await fetch('/api/auth-check', {
+    method:'POST',
+    headers:{'Accept':'application/json', 'Content-Type':'application/json'},
+    body: JSON.stringify({password})
+  });
+  const payload = await response.json().catch(() => ({}));
+  if(!response.ok || payload.ok === false || !payload.token){
+    throw new Error(payload.error || 'Hibás jelszó.');
+  }
+  return payload.token;
+}
+async function verifySession(){
+  const response = await fetch('/api/auth-check', {
+    method:'GET',
+    headers: authHeaders()
+  });
+  const payload = await response.json().catch(() => ({}));
+  if(!response.ok || payload.ok === false){
+    throw new Error(payload.error || 'Lejárt munkamenet.');
+  }
+  return true;
+}
+function lockApp(message=''){
+  document.body.classList.add('auth-locked');
+  const input = $('#authPassword');
+  const error = $('#authError');
+  if(input) input.value = '';
+  if(error){
+    error.hidden = !message;
+    error.textContent = message;
+  }
+}
+function unlockApp(){
+  document.body.classList.remove('auth-locked');
+  renderFilters();
+  renderAll();
+}
+async function attemptLogin(password){
+  const error = $('#authError');
+  const submit = $('#authSubmit');
+  if(error){ error.hidden = true; error.textContent = ''; }
+  if(submit){ submit.disabled = true; submit.textContent = 'Ellenőrzés...'; }
+  try{
+    const cleaned = String(password || '').trim();
+    if(!cleaned) throw new Error('Add meg az admin jelszót.');
+    const token = await loginWithPassword(cleaned);
+    setSessionToken(token);
+    unlockApp();
+  }catch(err){
+    setSessionToken('');
+    lockApp(err.message || 'Sikertelen belépés.');
+  }finally{
+    if(submit){ submit.disabled = false; submit.textContent = 'Belépés'; }
+  }
+}
+async function bootAuth(){
+  const saved = getSessionToken();
+  if(saved){
+    try{
+      await verifySession();
+      unlockApp();
+      return;
+    }catch{
+      setSessionToken('');
+    }
+  }
+  lockApp('');
+}
+$('#authForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  attemptLogin($('#authPassword')?.value || '');
+});
+
+async function remoteJson(url, options={}){
+  const headers = authHeaders(options.headers || {});
+  const response = await fetch(url, {...options, headers});
+  const payload = await response.json().catch(() => ({}));
+  if(!response.ok || payload.ok === false){
+    if(response.status === 401){
+      setSessionToken('');
+      lockApp('A munkamenet lejárt vagy hibás. Jelentkezz be újra.');
+      throw new Error('Lejárt vagy hiányzó munkamenet.');
+    }
+    throw new Error(payload.error || `Sikertelen kérés: ${response.status}`);
+  }
+  return payload;
+}
+async function loadFromGitHub(){
+  try{
+    const payload = await remoteJson('/api/load-tracker-csv');
+    if(payload.missing || !payload.csv?.trim()){
+      if(confirm('A GitHub CSV még üres vagy nem létezik. Feltöltöd a jelenlegi lokális állapotot?')){
+        await saveToGitHub();
+      }
+      return;
+    }
+    state = importCsv(payload.csv);
+    save();
+    alert('GitHub CSV betöltve.');
+  }catch(err){
+    console.error(err);
+    alert(`GitHub betöltés sikertelen: ${err.message}`);
+  }
+}
+async function saveToGitHub(){
+  try{
+    const csv = makeCsv();
+    const payload = await remoteJson('/api/save-tracker-csv', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({csv, message:`Update eHÖK dev tracker CSV - ${new Date().toISOString()}`})
+    });
+    alert(`GitHub mentés kész.${payload.commit ? '\nCommit: '+payload.commit.slice(0,7) : ''}`);
+  }catch(err){
+    console.error(err);
+    alert(`GitHub mentés sikertelen: ${err.message}`);
+  }
+}
+$('#remoteLoadBtn')?.addEventListener('click', loadFromGitHub);
+$('#remoteSaveBtn')?.addEventListener('click', saveToGitHub);
+$('#remoteKeyBtn')?.addEventListener('click', () => {
+  setSessionToken('');
+  lockApp('');
+});
+$('#logoutBtn')?.addEventListener('click', () => {
+  setSessionToken('');
+  lockApp('');
+});
+
+bootAuth();
 
 
 // v7.8 mobile sidebar behavior
