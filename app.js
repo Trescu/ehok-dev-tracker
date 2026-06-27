@@ -44,8 +44,16 @@ function hasUnsavedChanges(){
 function updateActionButtons(){
   const saveBtn = $('#remoteSaveBtn');
   const discardBtn = $('#discardBtn');
-  if(saveBtn) saveBtn.hidden = !hasUnsavedChanges();
-  if(discardBtn) discardBtn.hidden = !getDiscardAvailable();
+  if(saveBtn){
+    const active = hasUnsavedChanges();
+    saveBtn.disabled = !active;
+    saveBtn.classList.toggle('is-inactive', !active);
+  }
+  if(discardBtn){
+    const active = getDiscardAvailable();
+    discardBtn.disabled = !active;
+    discardBtn.classList.toggle('is-inactive', !active);
+  }
 }
 function sprintById(id){ return state.sprints.find(s => s.id === id); }
 function sprintName(id){ const s=sprintById(id); return s ? `${s.code ? s.code+' – ' : ''}${s.title}` : 'Nincs sprint'; }
@@ -373,7 +381,7 @@ $('#importInput').addEventListener('change', e => {
       captureLocalBaselineIfMissing();
       state=importCsv(reader.result);
       save();
-      alert('Importálás kész. A Mentés gomb csak akkor jelenik meg, ha van menteni való változás.');
+      alert('Importálás kész. A Mentés gomb aktív, amíg van menteni való változás.');
     } catch(err){
       console.error(err);
       alert('Hibás CSV fájl.');

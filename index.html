@@ -122,12 +122,24 @@
       <div id="noteList" class="card-list"></div>
     </section>
     <section class="bottom-action-bar" aria-label="Adatműveletek">
-      <button id="remoteSaveBtn" class="action-bar-btn primary-action" hidden><span class="action-icon">💾</span><span>Mentés</span></button>
-      <button id="discardBtn" class="action-bar-btn warning-action" hidden><span class="action-icon">↶</span><span>Módosítások elvetése</span></button>
-      <button id="remoteLoadBtn" class="action-bar-btn"><span class="action-icon">☁</span><span>Betöltés</span></button>
-      <label class="action-bar-btn file-label"><span class="action-icon">↑</span><span>Import</span><input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
-      <button id="exportBtn" class="action-bar-btn"><span class="action-icon">↓</span><span>Export</span></button>
-      <button id="resetBtn" class="action-bar-btn danger-action"><span class="action-icon">🗑</span><span>Helyi adatok törlése</span></button>
+      <button id="remoteSaveBtn" class="action-bar-btn primary-action" aria-label="Mentés">
+        <span class="action-icon icon-save" aria-hidden="true"></span><span class="action-label">Mentés</span>
+      </button>
+      <button id="discardBtn" class="action-bar-btn warning-action" aria-label="Módosítások elvetése">
+        <span class="action-icon icon-discard" aria-hidden="true"></span><span class="action-label">Módosítások elvetése</span>
+      </button>
+      <button id="remoteLoadBtn" class="action-bar-btn" aria-label="Betöltés">
+        <span class="action-icon icon-load" aria-hidden="true"></span><span class="action-label">Betöltés</span>
+      </button>
+      <label class="action-bar-btn file-label" aria-label="Import">
+        <span class="action-icon icon-import" aria-hidden="true"></span><span class="action-label">Import</span><input id="importInput" type="file" accept=".csv,text/csv" hidden />
+      </label>
+      <button id="exportBtn" class="action-bar-btn" aria-label="Export">
+        <span class="action-icon icon-export" aria-hidden="true"></span><span class="action-label">Export</span>
+      </button>
+      <button id="resetBtn" class="action-bar-btn danger-action" aria-label="Helyi adatok törlése">
+        <span class="action-icon icon-trash" aria-hidden="true"></span><span class="action-label">Helyi adatok törlése</span>
+      </button>
     </section>
   </main>
 
