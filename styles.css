@@ -58,6 +58,7 @@ button{cursor:pointer}
 }
 .nav-item:hover,.nav-item.active{background:rgba(255,255,255,.16);color:#fff}
 .sidebar-footer{margin-top:auto;display:grid;gap:10px;padding-top:32px}
+.sidebar-footer [hidden]{display:none!important}
 .ghost-btn{
   border:1px solid rgba(255,255,255,.34);
   background:rgba(255,255,255,.08);
