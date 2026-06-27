@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'ehokDevTrackerEmptyV7';
-const AREAS = ['Planning','Design','Frontend','Backend','Database','Security','Testing','Documentation','DevOps','UX','Accessibility','Refactor','Bugfix'];
+const AREAS = ['Tracker','Planning','Design','Frontend','Backend','Database','Security','Testing','Documentation','DevOps','UX','Accessibility','Refactor','Bugfix'];
 const STATUSES = ['Backlog','To Do','In Progress','Review','Done','Blocked'];
 const SPRINT_STATUSES = ['Tervezett','Folyamatban','Review','Kész','Blokkolt'];
 const PRIORITIES = ['Alacsony','Közepes','Magas','Kritikus'];
@@ -96,10 +96,11 @@ function renderSprints(){
 function renderSprint(s){
   const ts = tasksForSprint(s.id);
   const p = percent(ts);
-  const groups = AREAS.map(area => {
-    const items = ts.filter(t => t.area === area);
+  const sprintAreas = [...new Set([...AREAS, ...ts.map(t => t.area || 'Planning')])];
+  const groups = sprintAreas.map(area => {
+    const items = ts.filter(t => (t.area || 'Planning') === area);
     if(!items.length) return '';
-    return `<div class="task-group"><h3>${area}</h3>${items.map(renderInlineTask).join('')}</div>`;
+    return `<div class="task-group"><h3>${esc(area)}</h3>${items.map(renderInlineTask).join('')}</div>`;
   }).join('');
   return `<article class="sprint-card" data-sprint-id="${esc(s.id)}">
     <div class="sprint-summary">
