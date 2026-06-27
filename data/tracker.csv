@@ -241,4 +241,3 @@ note;N003;;Admin URL szabály;;;;;;;;;;;;;"Az admin platform URL-je slug nélkü
 note;N004;;HIP fejlesztési sorrend;;;;;;;;;;;;;"A HIP alapváz a Platform Core után jön, kezdetben csak platform alapadatokat jelenít meg, majd modulokkal bővül.";2026-06-26T19:21:17.078521;2026-06-26T19:21:17.078521
 note;N005;;Audit hozzáférés;;;;;;;;;;;;;Részletes audit adatok csak fejlesztői/szolgáltatói admin rétegben legyenek elérhetők.;2026-06-26T19:21:17.078521;2026-06-26T19:21:17.078521
 note;N006;;Landing függetlensége;;;;;;;;;;;;;"Az ehok.hu marketing landing page maradjon statikus, backend kommunikáció nélkül.";2026-06-26T19:21:17.078521;2026-06-26T19:21:17.078521
-note;9417c7e9-9c4c-42ba-9434-3699982da46b;;Ez egy nehy;;;;;;;;;;;;;;2026-06-27T15:40:04.200Z;2026-06-27T15:40:04.218Z
