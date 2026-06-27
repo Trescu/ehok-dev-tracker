@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'ehokDevTrackerEmptyV7';
 const AUTH_STORAGE_KEY = 'ehokDevTrackerSessionToken';
+const SERVER_BASELINE_KEY = 'ehokDevTrackerServerBaselineCsv';
 const AREAS = ['Tracker','Planning','Design','Frontend','Backend','Database','Security','Testing','Documentation','DevOps','UX','Accessibility','Refactor','Bugfix'];
 const STATUSES = ['Backlog','To Do','In Progress','Review','Done','Blocked'];
 const SPRINT_STATUSES = ['Tervezett','Folyamatban','Review','Kész','Blokkolt'];
@@ -344,11 +345,24 @@ $('#exportBtn').addEventListener('click', () => {
 $('#importInput').addEventListener('change', e => {
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=()=>{ try{ state=importCsv(reader.result); save(); alert('CSV import kész.'); } catch(err){ console.error(err); alert('Hibás CSV fájl.'); } };
+  reader.onload=()=>{
+    try{
+      captureLocalBaselineIfMissing();
+      state=importCsv(reader.result);
+      save();
+      alert('Importálás kész. A szerveren mentett állapotot a „Változtatások elvetése” gombbal tudod visszahozni.');
+    } catch(err){
+      console.error(err);
+      alert('Hibás CSV fájl.');
+    } finally {
+      e.target.value = '';
+    }
+  };
   reader.readAsText(file);
 });
 $('#resetBtn').addEventListener('click', () => {
-  if(confirm('Biztosan törlöd az összes lokális adatot és üres állapotot állítasz vissza?')){
+  if(confirm('Biztosan törlöd az összes helyi adatot? A szerveren mentett CSV nem törlődik.')){
+    captureLocalBaselineIfMissing();
     state=structuredClone(emptyState); save();
   }
 });
@@ -458,21 +472,31 @@ async function remoteJson(url, options={}){
   }
   return payload;
 }
+function setServerBaselineCsv(csv){
+  if(typeof csv === 'string') localStorage.setItem(SERVER_BASELINE_KEY, csv);
+}
+function getServerBaselineCsv(){
+  return localStorage.getItem(SERVER_BASELINE_KEY) || '';
+}
+function captureLocalBaselineIfMissing(){
+  if(!getServerBaselineCsv()) setServerBaselineCsv(makeCsv());
+}
 async function loadFromGitHub(){
   try{
     const payload = await remoteJson('/api/load-tracker-csv');
     if(payload.missing || !payload.csv?.trim()){
-      if(confirm('A GitHub CSV még üres vagy nem létezik. Feltöltöd a jelenlegi lokális állapotot?')){
+      if(confirm('A szerveren még üres vagy nem létezik a CSV. Feltöltöd a jelenlegi helyi állapotot?')){
         await saveToGitHub();
       }
       return;
     }
+    setServerBaselineCsv(payload.csv);
     state = importCsv(payload.csv);
     save();
-    alert('GitHub CSV betöltve.');
+    alert('Adatok betöltve szerverről.');
   }catch(err){
     console.error(err);
-    alert(`GitHub betöltés sikertelen: ${err.message}`);
+    alert(`Szerverről betöltés sikertelen: ${err.message}`);
   }
 }
 async function saveToGitHub(){
@@ -483,22 +507,53 @@ async function saveToGitHub(){
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({csv, message:`Update eHÖK dev tracker CSV - ${new Date().toISOString()}`})
     });
-    alert(`GitHub mentés kész.${payload.commit ? '\nCommit: '+payload.commit.slice(0,7) : ''}`);
+    setServerBaselineCsv(csv);
+    alert(`Változtatások mentve.${payload.backup ? '\nElőző szerverállapot ideiglenes mentésbe került.' : ''}${payload.commit ? '\nCommit: '+payload.commit.slice(0,7) : ''}`);
   }catch(err){
     console.error(err);
-    alert(`GitHub mentés sikertelen: ${err.message}`);
+    alert(`Mentés sikertelen: ${err.message}`);
+  }
+}
+async function discardChanges(){
+  try{
+    if(!confirm('Elveted a változtatásokat? Ha van ideiglenes szervermentés, az előző fő CSV kerül visszaállításra.')) return;
+    let csv = '';
+    let restoredBackup = false;
+
+    try{
+      const restored = await remoteJson('/api/restore-tracker-backup', { method:'POST' });
+      if(restored.csv?.trim()){
+        csv = restored.csv;
+        restoredBackup = true;
+      }
+    }catch(restoreErr){
+      const payload = await remoteJson('/api/load-tracker-csv');
+      csv = payload.csv?.trim() ? payload.csv : getServerBaselineCsv();
+    }
+
+    if(!csv){
+      alert('Nincs visszaállítható szerverállapot.');
+      return;
+    }
+    setServerBaselineCsv(csv);
+    state = importCsv(csv);
+    save();
+    alert(restoredBackup ? 'Ideiglenes mentés visszaállítva, az előző fő CSV újra aktív.' : 'Helyi változtatások elvetve, a szerveren mentett állapot visszaállítva.');
+  }catch(err){
+    console.error(err);
+    const fallback = getServerBaselineCsv();
+    if(fallback && confirm(`Szerverről nem sikerült betölteni: ${err.message}\nVisszaállítsam az utoljára helyben eltárolt szerverállapotot?`)){
+      state = importCsv(fallback);
+      save();
+      alert('Helyi mentett szerverállapot visszaállítva.');
+      return;
+    }
+    alert(`Elvetés sikertelen: ${err.message}`);
   }
 }
 $('#remoteLoadBtn')?.addEventListener('click', loadFromGitHub);
 $('#remoteSaveBtn')?.addEventListener('click', saveToGitHub);
-$('#remoteKeyBtn')?.addEventListener('click', () => {
-  setSessionToken('');
-  lockApp('');
-});
-$('#logoutBtn')?.addEventListener('click', () => {
-  setSessionToken('');
-  lockApp('');
-});
+$('#discardBtn')?.addEventListener('click', discardChanges);
 
 bootAuth();
 

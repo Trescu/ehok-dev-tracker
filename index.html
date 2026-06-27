@@ -40,13 +40,12 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button id="remoteLoadBtn" class="ghost-btn">GitHub betöltés</button>
-      <button id="remoteSaveBtn" class="ghost-btn">GitHub mentés</button>
-      <button id="remoteKeyBtn" class="ghost-btn">Új bejelentkezés</button>
-      <button id="logoutBtn" class="ghost-btn ghost-danger">Kilépés</button>
-      <button id="exportBtn" class="ghost-btn">CSV export</button>
-      <label class="ghost-btn file-label">CSV import<input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
-      <button id="resetBtn" class="ghost-btn ghost-danger">Üres állapot visszaállítása</button>
+      <button id="remoteSaveBtn" class="ghost-btn">Változtatások mentése</button>
+      <button id="remoteLoadBtn" class="ghost-btn">Adatok betöltése szerverről</button>
+      <button id="discardBtn" class="ghost-btn ghost-danger">Változtatások elvetése</button>
+      <label class="ghost-btn file-label">Importálás<input id="importInput" type="file" accept=".csv,text/csv" hidden /></label>
+      <button id="exportBtn" class="ghost-btn">Exportálás</button>
+      <button id="resetBtn" class="ghost-btn ghost-danger">Helyi adatok törlése</button>
     </div>
   </aside>
 
@@ -58,9 +57,10 @@
         <h1 id="pageTitle">Dashboard</h1>
       </div>
       <div class="top-actions" aria-label="Gyors műveletek">
-        <button class="primary-btn compact-action" data-open-modal="task" data-icon="+" aria-label="Új feladat"><span>Új feladat</span></button>
+        <button class="primary-btn compact-action" data-open-modal="task" data-icon="F" aria-label="Új feladat"><span>Új feladat</span></button>
         <button class="secondary-btn compact-action" data-open-modal="sprint" data-icon="S" aria-label="Új sprint"><span>Új sprint</span></button>
-        <button class="secondary-btn compact-action" data-open-modal="milestone" data-icon="◆" aria-label="Új mérföldkő"><span>Új mérföldkő</span></button>
+        <button class="secondary-btn compact-action" data-open-modal="milestone" data-icon="M" aria-label="Új mérföldkő"><span>Új mérföldkő</span></button>
+        <button class="secondary-btn compact-action" data-open-modal="note" data-icon="J" aria-label="Új jegyzet"><span>Új jegyzet</span></button>
       </div>
     </header>
 

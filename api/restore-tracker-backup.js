@@ -1,6 +1,5 @@
 const { requireSession } = require('./_auth');
 const GITHUB_API_VERSION = '2022-11-28';
-const MAX_CSV_BYTES = 1024 * 1024 * 2; // 2 MB
 
 function env(name, fallback = '') {
   return process.env[name] || fallback;
@@ -29,11 +28,10 @@ async function readFile({ owner, repo, path, branch, token }) {
       'User-Agent': 'ehok-dev-tracker'
     }
   });
-
-  if (response.status === 404) return { sha: null, content: '' };
+  if (response.status === 404) return { missing: true, sha: null, content: '' };
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.message || `Could not read ${path} from GitHub`);
-  return { sha: payload.sha, content: decodeBase64Utf8(payload.content) };
+  return { missing: false, sha: payload.sha, content: decodeBase64Utf8(payload.content) };
 }
 
 async function writeFile({ owner, repo, path, branch, token, content, message, sha }) {
@@ -55,7 +53,6 @@ async function writeFile({ owner, repo, path, branch, token, content, message, s
     },
     body: JSON.stringify(body)
   });
-
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.message || `GitHub save failed for ${path}`);
   return payload;
@@ -70,56 +67,35 @@ module.exports = async function handler(req, res) {
   try {
     if (!requireSession(req, res)) return;
 
-    const csv = typeof req.body?.csv === 'string' ? req.body.csv : '';
-    if (!csv.trim()) return res.status(400).json({ ok: false, error: 'CSV content is empty' });
-    if (Buffer.byteLength(csv, 'utf8') > MAX_CSV_BYTES) {
-      return res.status(413).json({ ok: false, error: 'CSV content is too large' });
-    }
-
     const owner = requireEnv('GITHUB_OWNER');
     const repo = requireEnv('GITHUB_REPO');
     const branch = env('GITHUB_BRANCH', 'main');
     const path = env('GITHUB_CSV_PATH', 'data/tracker.csv');
     const backupPath = env('GITHUB_BACKUP_CSV_PATH', 'data/tracker.backup.csv');
     const token = requireEnv('GITHUB_TOKEN');
-    const message = req.body?.message || `Update eHÖK dev tracker CSV - ${new Date().toISOString()}`;
 
-    const current = await readFile({ owner, repo, path, branch, token });
-    let backupCommit = null;
-
-    if (current.content && current.content.trim()) {
-      const currentBackup = await readFile({ owner, repo, path: backupPath, branch, token });
-      const backupPayload = await writeFile({
-        owner,
-        repo,
-        path: backupPath,
-        branch,
-        token,
-        content: current.content,
-        sha: currentBackup.sha,
-        message: `Temporary backup before tracker CSV overwrite - ${new Date().toISOString()}`
-      });
-      backupCommit = backupPayload.commit?.sha || null;
+    const backup = await readFile({ owner, repo, path: backupPath, branch, token });
+    if (backup.missing || !backup.content.trim()) {
+      return res.status(404).json({ ok: false, missing: true, error: 'No temporary backup CSV found' });
     }
 
+    const current = await readFile({ owner, repo, path, branch, token });
     const payload = await writeFile({
       owner,
       repo,
       path,
       branch,
       token,
-      content: csv,
+      content: backup.content,
       sha: current.sha,
-      message
+      message: `Restore tracker CSV from temporary backup - ${new Date().toISOString()}`
     });
 
     return res.status(200).json({
       ok: true,
+      csv: backup.content,
       commit: payload.commit?.sha || null,
-      backup: Boolean(backupCommit),
-      backupCommit,
-      path: payload.content?.path || path,
-      htmlUrl: payload.content?.html_url || null
+      path: payload.content?.path || path
     });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message || 'Server error' });
