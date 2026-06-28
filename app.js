@@ -6,8 +6,10 @@ const AREAS = ['Tracker','Planning','Design','Frontend','Backend','Database','Se
 const STATUSES = ['Backlog','To Do','In Progress','Review','Done','Blocked'];
 const SPRINT_STATUSES = ['Tervezett','Folyamatban','Review','Kész','Blokkolt'];
 const PRIORITIES = ['Alacsony','Közepes','Magas','Kritikus'];
+const BUG_PRIORITIES = ['Alacsony','Közepes','Magas','CRASH'];
+const BUG_STATUSES = ['Rögzítve','Folyamatban','Javítva'];
 
-const emptyState = { sprints:[], tasks:[], milestones:[], notes:[] };
+const emptyState = { sprints:[], tasks:[], milestones:[], notes:[], bugs:[] };
 let state = load();
 let modalContext = null;
 
@@ -18,7 +20,7 @@ const now = () => new Date().toISOString();
 const esc = (v='') => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
 function load(){
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(emptyState); }
+  try { return {...structuredClone(emptyState), ...(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {})}; }
   catch { return structuredClone(emptyState); }
 }
 function save(){
@@ -26,7 +28,7 @@ function save(){
   renderAll();
 }
 function hasLocalContent(){
-  return state.sprints.length || state.tasks.length || state.milestones.length || state.notes.length;
+  return state.sprints.length || state.tasks.length || state.milestones.length || state.notes.length || state.bugs.length;
 }
 function getDiscardAvailable(){
   return localStorage.getItem(DISCARD_AVAILABLE_KEY) === '1';
@@ -62,9 +64,9 @@ function doneCount(tasks){ return tasks.filter(t => t.status === 'Done').length;
 function percent(tasks){ return tasks.length ? Math.round(doneCount(tasks)/tasks.length*100) : 0; }
 function badgeClass(v=''){
   const x=String(v).toLowerCase();
-  if(x.includes('done')||x.includes('kész')) return 'done';
-  if(x.includes('blocked')||x.includes('blokkol')||x.includes('kritikus')) return 'blocked critical';
-  if(x.includes('progress')||x.includes('folyamat')||x.includes('review')) return 'progressing';
+  if(x.includes('done')||x.includes('kész')||x.includes('javítva')) return 'done';
+  if(x.includes('blocked')||x.includes('blokkol')||x.includes('kritikus')||x.includes('crash')||x.includes('magas')) return 'blocked critical';
+  if(x.includes('progress')||x.includes('folyamat')||x.includes('review')||x.includes('rögzítve')) return 'progressing';
   return '';
 }
 function fmtDate(v){ return v || 'Nincs dátum'; }
@@ -218,16 +220,44 @@ function renderNotes(){
     <div class="card-actions"><button class="secondary-btn" data-edit-note="${esc(n.id)}">Szerkesztés</button><button class="danger-btn" data-delete-note="${esc(n.id)}">Törlés</button></div>
   </article>`).join('') : `<div class="empty">Nincs jegyzet.</div>`;
 }
+
+function nextBugNumber(){
+  return (state.bugs || []).reduce((max, b) => Math.max(max, Number(b.bugId) || 0), 0) + 1;
+}
+function renderBugs(){
+  const q = ($('#bugSearch')?.value || '').toLowerCase();
+  const priority = $('#bugPriorityFilter')?.value || '';
+  const status = $('#bugStatusFilter')?.value || '';
+  let list = (state.bugs || []).filter(b => [b.bugId,b.title,b.description,b.priority,b.status].some(v=>String(v||'').toLowerCase().includes(q)));
+  if(priority) list = list.filter(b=>b.priority===priority);
+  if(status) list = list.filter(b=>b.status===status);
+  $('#bugList').innerHTML = list.length ? `<article class="bug-table" aria-label="Bug riport lista">
+    <div class="bug-row bug-head"><span>ID</span><span>Title</span><span>Leírás</span><span>Prio</span><span>Állapot</span><span></span></div>
+    ${list.map(renderBugRow).join('')}
+  </article>` : `<div class="empty">Nincs bug riport.</div>`;
+}
+function renderBugRow(b){
+  return `<div class="bug-row">
+    <strong>#${esc(b.bugId || '')}</strong>
+    <div class="item-title">${esc(b.title)}</div>
+    <p class="meta">${esc(b.description)}</p>
+    <span class="badge ${badgeClass(b.priority)}">${esc(b.priority)}</span>
+    <span class="badge ${badgeClass(b.status)}">${esc(b.status)}</span>
+    <div class="card-actions bug-actions"><button class="secondary-btn" data-edit-bug="${esc(b.id)}">Szerkesztés</button><button class="danger-btn" data-delete-bug="${esc(b.id)}">Törlés</button></div>
+  </div>`;
+}
 function renderFilters(){
   $('#taskAreaFilter').innerHTML = `<option value="">Minden terület</option>` + AREAS.map(a=>`<option>${a}</option>`).join('');
   $('#taskStatusFilter').innerHTML = `<option value="">Minden állapot</option>` + STATUSES.map(s=>`<option>${s}</option>`).join('');
+  $('#bugPriorityFilter').innerHTML = `<option value="">Minden prioritás</option>` + BUG_PRIORITIES.map(p=>`<option>${p}</option>`).join('');
+  $('#bugStatusFilter').innerHTML = `<option value="">Minden állapot</option>` + BUG_STATUSES.map(s=>`<option>${s}</option>`).join('');
 }
-function renderAll(){ renderDashboard(); renderSprints(); renderTasks(); renderMilestones(); renderNotes(); updateActionButtons(); }
+function renderAll(){ renderDashboard(); renderSprints(); renderTasks(); renderMilestones(); renderNotes(); renderBugs(); updateActionButtons(); }
 
 function openModal(type, id=null, extra={}){
   modalContext = {type,id,extra};
-  const titles = {sprint:'Sprint szerkesztése', task:'Feladat szerkesztése', milestone:'Mérföldkő szerkesztése', note:'Jegyzet szerkesztése'};
-  $('#modalTitle').textContent = id ? titles[type] : ({sprint:'Új sprint',task:'Új feladat',milestone:'Új mérföldkő',note:'Új jegyzet'}[type]);
+  const titles = {sprint:'Sprint szerkesztése', task:'Feladat szerkesztése', milestone:'Mérföldkő szerkesztése', note:'Jegyzet szerkesztése', bug:'Bug riport szerkesztése'};
+  $('#modalTitle').textContent = id ? titles[type] : ({sprint:'Új sprint',task:'Új feladat',milestone:'Új mérföldkő',note:'Új jegyzet',bug:'Új bug riport'}[type]);
   $('#modalForm').innerHTML = formHtml(type, id, extra);
   $('#modalBackdrop').hidden = false;
 }
@@ -260,6 +290,13 @@ function formHtml(type, id, extra){
     <div class="form-field"><label>Leírás</label><textarea name="description">${esc(m.description)}</textarea></div>
     <div class="form-row"><div class="form-field"><label>Dátum</label><input type="date" name="dueDate" value="${esc(m.dueDate)}"></div><div class="form-field"><label>Állapot</label><select name="status">${SPRINT_STATUSES.map(s=>`<option ${s===m.status?'selected':''}>${s}</option>`).join('')}</select></div></div>${formButtons()}`;
   }
+  if(type==='bug'){
+    const b = state.bugs.find(x=>x.id===id) || {bugId:nextBugNumber(), title:'', description:'', priority:'Közepes', status:'Rögzítve'};
+    return `<div class="form-row"><div class="form-field"><label>Automatikus ID</label><input name="bugId" value="${esc(b.bugId)}" readonly></div><div class="form-field"><label>Állapot</label><select name="status">${BUG_STATUSES.map(x=>`<option ${x===b.status?'selected':''}>${x}</option>`).join('')}</select></div></div>
+    <div class="form-field"><label>Title</label><input name="title" value="${esc(b.title)}" required></div>
+    <div class="form-field"><label>Leírás</label><textarea name="description">${esc(b.description)}</textarea></div>
+    <div class="form-field"><label>Prio</label><select name="priority">${BUG_PRIORITIES.map(x=>`<option ${x===b.priority?'selected':''}>${x}</option>`).join('')}</select></div>${formButtons()}`;
+  }
   const n = state.notes.find(x=>x.id===id) || {title:'',body:'',tags:''};
   return `<div class="form-field"><label>Cím</label><input name="title" value="${esc(n.title)}" required></div>
   <div class="form-field"><label>Jegyzet</label><textarea name="body">${esc(n.body)}</textarea></div>
@@ -272,7 +309,7 @@ $('#modalForm').addEventListener('submit', e => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target));
   const {type,id} = modalContext;
-  const collection = type === 'sprint' ? 'sprints' : type === 'task' ? 'tasks' : type === 'milestone' ? 'milestones' : 'notes';
+  const collection = type === 'sprint' ? 'sprints' : type === 'task' ? 'tasks' : type === 'milestone' ? 'milestones' : type === 'bug' ? 'bugs' : 'notes';
   if(id){
     state[collection] = state[collection].map(x => x.id === id ? {...x, ...data, updatedAt:now()} : x);
   } else {
@@ -296,12 +333,14 @@ document.addEventListener('click', e => {
   if(t.dataset.editTask) openModal('task', t.dataset.editTask);
   if(t.dataset.editMilestone) openModal('milestone', t.dataset.editMilestone);
   if(t.dataset.editNote) openModal('note', t.dataset.editNote);
+  if(t.dataset.editBug) openModal('bug', t.dataset.editBug);
   if(t.dataset.deleteSprint && confirm('Törlöd a sprintet? A feladatok sprint nélkül maradnak.')){
     const id=t.dataset.deleteSprint; state.sprints=state.sprints.filter(x=>x.id!==id); state.tasks=state.tasks.map(task=>task.sprintId===id?{...task,sprintId:'',updatedAt:now()}:task); save();
   }
   if(t.dataset.deleteTask && confirm('Törlöd a feladatot?')){ state.tasks=state.tasks.filter(x=>x.id!==t.dataset.deleteTask); save(); }
   if(t.dataset.deleteMilestone && confirm('Törlöd a mérföldkövet?')){ state.milestones=state.milestones.filter(x=>x.id!==t.dataset.deleteMilestone); save(); }
   if(t.dataset.deleteNote && confirm('Törlöd a jegyzetet?')){ state.notes=state.notes.filter(x=>x.id!==t.dataset.deleteNote); save(); }
+  if(t.dataset.deleteBug && confirm('Törlöd a bug riportot?')){ state.bugs=state.bugs.filter(x=>x.id!==t.dataset.deleteBug); save(); }
 });
 document.addEventListener('change', e => {
   if(e.target.dataset.taskStatus){
@@ -310,7 +349,7 @@ document.addEventListener('change', e => {
     save();
   }
 });
-['sprintSearch','taskSearch','taskAreaFilter','taskStatusFilter','milestoneSearch','noteSearch'].forEach(id => {
+['sprintSearch','taskSearch','taskAreaFilter','taskStatusFilter','milestoneSearch','noteSearch','bugSearch','bugPriorityFilter','bugStatusFilter'].forEach(id => {
   document.addEventListener('input', e => { if(e.target.id===id) renderAll(); });
   document.addEventListener('change', e => { if(e.target.id===id) renderAll(); });
 });
@@ -320,12 +359,13 @@ function csvEscape(v=''){
   return /[",;]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
 }
 function makeCsv(){
-  const header = ['type','id','code','title','description','status','priority','area','sprintId','sprintCode','startDate','endDate','dueDate','estimateHours','tags','notes','body','createdAt','updatedAt'];
+  const header = ['type','id','code','title','description','status','priority','area','sprintId','sprintCode','startDate','endDate','dueDate','estimateHours','tags','notes','body','createdAt','updatedAt','bugId'];
   const rows=[header];
-  state.sprints.forEach(s => rows.push(['sprint',s.id,s.code,s.title,s.description,s.status,'','','','',s.startDate,s.endDate,'','','','','',s.createdAt,s.updatedAt]));
-  state.tasks.forEach(t => rows.push(['task',t.id,'',t.title,t.description,t.status,t.priority,t.area,t.sprintId,sprintById(t.sprintId)?.code || '','','',t.dueDate,t.estimateHours,t.tags,t.notes,'',t.createdAt,t.updatedAt]));
-  state.milestones.forEach(m => rows.push(['milestone',m.id,'',m.title,m.description,m.status,'','','','','','',m.dueDate,'','','','',m.createdAt,m.updatedAt]));
-  state.notes.forEach(n => rows.push(['note',n.id,'',n.title,'','','','','','','','','','',n.tags,'',n.body,n.createdAt,n.updatedAt]));
+  state.sprints.forEach(s => rows.push(['sprint',s.id,s.code,s.title,s.description,s.status,'','','','',s.startDate,s.endDate,'','','','','',s.createdAt,s.updatedAt,'']));
+  state.tasks.forEach(t => rows.push(['task',t.id,'',t.title,t.description,t.status,t.priority,t.area,t.sprintId,sprintById(t.sprintId)?.code || '','','',t.dueDate,t.estimateHours,t.tags,t.notes,'',t.createdAt,t.updatedAt,'']));
+  state.milestones.forEach(m => rows.push(['milestone',m.id,'',m.title,m.description,m.status,'','','','','','',m.dueDate,'','','','',m.createdAt,m.updatedAt,'']));
+  state.notes.forEach(n => rows.push(['note',n.id,'',n.title,'','','','','','','','','','',n.tags,'',n.body,n.createdAt,n.updatedAt,'']));
+  state.bugs.forEach(b => rows.push(['bug',b.id,'',b.title,b.description,b.status,b.priority,'','','','','','','','','','',b.createdAt,b.updatedAt,b.bugId]));
   return rows.map(r => r.map(csvEscape).join(';')).join('\n');
 }
 function detectDelimiter(text){
@@ -361,6 +401,7 @@ function importCsv(text){
     if(type==='task') pendingTasks.push(r);
     if(type==='milestone') next.milestones.push({id:get(r,'id')||uid(), title:get(r,'title'), description:get(r,'description'), status:get(r,'status')||'Tervezett', dueDate:get(r,'dueDate'), createdAt:get(r,'createdAt')||now(), updatedAt:get(r,'updatedAt')||now()});
     if(type==='note') next.notes.push({id:get(r,'id')||uid(), title:get(r,'title'), body:get(r,'body'), tags:get(r,'tags'), createdAt:get(r,'createdAt')||now(), updatedAt:get(r,'updatedAt')||now()});
+    if(type==='bug') next.bugs.push({id:get(r,'id')||uid(), bugId:get(r,'bugId')||String(next.bugs.length+1), title:get(r,'title'), description:get(r,'description'), priority:get(r,'priority')||'Közepes', status:get(r,'status')||'Rögzítve', createdAt:get(r,'createdAt')||now(), updatedAt:get(r,'updatedAt')||now()});
   });
   pendingTasks.forEach(r => {
     let sprintId=get(r,'sprintId');

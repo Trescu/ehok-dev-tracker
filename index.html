@@ -37,6 +37,7 @@
       <button class="nav-item" data-view="tasks">Feladatok</button>
       <button class="nav-item" data-view="milestones">Mérföldkövek</button>
       <button class="nav-item" data-view="notes">Jegyzetek</button>
+      <button class="nav-item" data-view="bugs">Bug Riport</button>
     </nav>
 
   </aside>
@@ -53,6 +54,7 @@
         <button class="secondary-btn compact-action" data-open-modal="sprint" data-icon="S" aria-label="Új sprint"><span>Új sprint</span></button>
         <button class="secondary-btn compact-action" data-open-modal="milestone" data-icon="M" aria-label="Új mérföldkő"><span>Új mérföldkő</span></button>
         <button class="secondary-btn compact-action" data-open-modal="note" data-icon="J" aria-label="Új jegyzet"><span>Új jegyzet</span></button>
+        <button class="secondary-btn compact-action" data-open-modal="bug" data-icon="B" aria-label="Új bug riport"><span>Új bug riport</span></button>
       </div>
     </header>
 
@@ -120,6 +122,16 @@
         <button class="primary-btn" data-open-modal="note">Új jegyzet</button>
       </div>
       <div id="noteList" class="card-list"></div>
+    </section>
+
+    <section id="bugs" class="view">
+      <div class="view-tools tools-grid bug-tools">
+        <input id="bugSearch" placeholder="Keresés bug riportok között..." />
+        <select id="bugPriorityFilter"><option value="">Minden prioritás</option></select>
+        <select id="bugStatusFilter"><option value="">Minden állapot</option></select>
+        <button class="primary-btn" data-open-modal="bug">Új bug riport</button>
+      </div>
+      <div id="bugList" class="bug-list"></div>
     </section>
     <section class="bottom-action-bar" aria-label="Adatműveletek">
       <button id="remoteSaveBtn" class="action-bar-btn primary-action" aria-label="Mentés">
